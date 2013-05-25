@@ -1,0 +1,52 @@
+<html>
+<head>
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://localhost:4434/notifications/desktop-notify-min.js"></script>
+<script>
+    function init_notifications() {
+        console.log('Is supported: %s', notify.isSupported);
+        var permissionLevel = notify.permissionLevel()
+        console.log('Permission level: %s', permissionLevel);
+        if(permissionLevel == notify.PERMISSION_DEFAULT) {
+            notify.requestPermission();
+        } else if(permissionLevel == notify.PERMISSION_GRANTED) {
+            console.log('Permission exists');
+        } else {
+            console.log('Permission probably denied.');
+        }
+    }
+
+    function send_notifications() {
+        notify.createNotification('Notification', {body: 'Body', icon: 'icon'});
+    }
+</script>
+<script>
+    var socket = io.connect('http://localhost:4433');
+    socket.on('news', function (data) {
+        console.log(data);
+        socket.emit('my other event', { my: 'data' });
+    });
+    socket.on('answer', function (data) {
+        console.log('Received event');
+        send_notifications();
+    });
+
+    function send_pulse() {
+        socket.emit('my other event', { my: 'data' });
+    }
+
+    var frequency = 5000;
+    var interval = 0;
+    function startLoop() {
+        if(interval > 0) {
+            clearInterval(interval);
+        }
+        interval = setInterval("send_pulse()", frequency);
+    }
+</script>
+</head>
+<body onload="startLoop()">
+    <div onclick="init_notifications()">Gimme notes</div>
+</body>
+</html>
+
